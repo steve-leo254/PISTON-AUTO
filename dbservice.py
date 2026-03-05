@@ -20,7 +20,10 @@ migrate = Migrate(app, db)
 
 
 def create_app():
-    app = Flask(__name__, static_folder='.', static_url_path='')
+    app = Flask(__name__, 
+                template_folder='Templates',
+                static_folder='.', 
+                static_url_path='')
     app.config['SECRET_KEY'] = 'your_secret_key'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///piston_autos.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -67,7 +70,7 @@ class RegisterForm(FlaskForm):
     confirm_password = PasswordField('Confirm Password', validators=[
                                      DataRequired(), EqualTo('password')])
     role = SelectField('Role', choices=[
-                       (role.value, role.name) for role in UserRole], validators=[DataRequired()])
+                       (role.value, role.name) for role in UserRole], default=UserRole.USER.value)
     submit = SubmitField('Register')
         
 

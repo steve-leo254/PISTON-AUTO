@@ -244,30 +244,30 @@
                                     </td>
                                     <td>
                                         <div class="btn-group" role="group">
-                                            <button class="btn btn-sm btn-info action-btn" onclick="viewDetails({{ booking.id }})" title="View Details">
+                                            <button class="btn btn-sm btn-info action-btn" data-booking-id="{{ booking.id }}" onclick="viewDetails(this.dataset.bookingId)" title="View Details">
                                                 <i class="fa fa-eye"></i>
                                             </button>
                                             {% if booking.status.value == 'PENDING' %}
-                                                <button class="btn btn-sm btn-success action-btn" onclick="updateStatus({{ booking.id }}, 'CONFIRMED')" title="Confirm">
+                                                <button class="btn btn-sm btn-success action-btn" data-booking-id="{{ booking.id }}" data-status="CONFIRMED" onclick="updateStatus(this.dataset.bookingId, this.dataset.status)" title="Confirm">
                                                     <i class="fa fa-check"></i>
                                                 </button>
                                             {% endif %}
                                             {% if booking.status.value == 'CONFIRMED' %}
-                                                <button class="btn btn-sm btn-primary action-btn" onclick="updateStatus({{ booking.id }}, 'IN_PROGRESS')" title="Start Service">
+                                                <button class="btn btn-sm btn-primary action-btn" data-booking-id="{{ booking.id }}" data-status="IN_PROGRESS" onclick="updateStatus(this.dataset.bookingId, this.dataset.status)" title="Start Service">
                                                     <i class="fa fa-play"></i>
                                                 </button>
                                             {% endif %}
                                             {% if booking.status.value == 'IN_PROGRESS' %}
-                                                <button class="btn btn-sm btn-success action-btn" onclick="updateStatus({{ booking.id }}, 'COMPLETED')" title="Complete">
+                                                <button class="btn btn-sm btn-success action-btn" data-booking-id="{{ booking.id }}" data-status="COMPLETED" onclick="updateStatus(this.dataset.bookingId, this.dataset.status)" title="Complete">
                                                     <i class="fa fa-check-double"></i>
                                                 </button>
                                             {% endif %}
                                             {% if booking.status.value not in ['COMPLETED', 'CANCELLED'] %}
-                                                <button class="btn btn-sm btn-danger action-btn" onclick="updateStatus({{ booking.id }}, 'CANCELLED')" title="Cancel">
+                                                <button class="btn btn-sm btn-danger action-btn" data-booking-id="{{ booking.id }}" data-status="CANCELLED" onclick="updateStatus(this.dataset.bookingId, this.dataset.status)" title="Cancel">
                                                     <i class="fa fa-times"></i>
                                                 </button>
                                             {% endif %}
-                                            <button class="btn btn-sm btn-warning action-btn" onclick="contactCustomer({{ booking.id }})" title="Contact">
+                                            <button class="btn btn-sm btn-warning action-btn" data-booking-id="{{ booking.id }}" onclick="contactCustomer(this.dataset.bookingId)" title="Contact">
                                                 <i class="fa fa-phone"></i>
                                             </button>
                                         </div>

@@ -452,7 +452,50 @@ def about():
 
 @app.route('/services')
 def services():
-    return render_template('services.html')
+    # Define services data for the template
+    services = [
+        {
+            'id': 1,
+            'name': 'Engine Diagnostics',
+            'description': 'Comprehensive engine diagnostics using state-of-the-art equipment to identify and resolve any engine issues quickly and accurately.',
+            'icon': 'fa-cogs',
+            'image': '/img/service-1.jpg',
+            'features': ['Complete engine scan', 'Performance analysis', 'Emission testing', 'Computer diagnostics'],
+            'time_required': '1-2 hours',
+            'price': 'Ksh 3,500 - 8,000'
+        },
+        {
+            'id': 2,
+            'name': 'Oil Change & Service',
+            'description': 'Regular oil changes and comprehensive service to keep your engine running smoothly and efficiently.',
+            'icon': 'fa-oil-can',
+            'image': '/img/service-2.jpg',
+            'features': ['Oil filter replacement', 'Fluid check', 'Lubrication', 'Safety inspection'],
+            'time_required': '30-45 minutes',
+            'price': 'Ksh 2,500 - 4,000'
+        },
+        {
+            'id': 3,
+            'name': 'Brake Service',
+            'description': 'Complete brake system inspection and service to ensure your safety on the road.',
+            'icon': 'fa-compact-disc',
+            'image': '/img/service-3.jpg',
+            'features': ['Brake pad replacement', 'Rotor resurfacing', 'Fluid flush', 'System inspection'],
+            'time_required': '2-3 hours',
+            'price': 'Ksh 5,000 - 12,000'
+        },
+        {
+            'id': 4,
+            'name': 'Tire Service',
+            'description': 'Complete tire care including rotation, balancing, and replacement for optimal performance and safety.',
+            'icon': 'fa-circle',
+            'image': '/img/service-4.jpg',
+            'features': ['Tire rotation', 'Wheel balancing', 'Patch repair', 'New tire installation'],
+            'time_required': '1-2 hours',
+            'price': 'Ksh 1,500 - 15,000'
+        }
+    ]
+    return render_template('services.html', services=services)
 
 
 @app.route('/contact')
@@ -499,7 +542,7 @@ def admin_bookings():
         .add_columns(User.username)
         .all()
     )
-    return render_template('admin_bookings.html', bookings=bookings)
+    return render_template('admin_bookings.html', bookings=bookings, timedelta=timedelta)
 
 
 @app.route('/admin/users')

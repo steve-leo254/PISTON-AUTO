@@ -87,7 +87,7 @@
                 
                 <!-- Persistent Login Button for Guests -->
                 {% if not session.username %}
-                <a href="login.html" class="nav-item nav-link bg-primary text-white px-3 rounded-pill">
+                <a href="{{ url_for('login') }}" class="nav-item nav-link bg-primary text-white px-3 rounded-pill">
                     <i class="fa fa-sign-in-alt me-1"></i>Login
                 </a>
                 {% endif %}

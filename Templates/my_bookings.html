@@ -109,7 +109,7 @@
                         <div class="card bg-success text-white">
                             <div class="card-body">
                                 <h5 class="card-title">Completed</h5>
-                                <h3 class="mb-0">{{ bookings|selectattr('status.value', 'COMPLETED')|list|length }}</h3>
+                                <h3 class="mb-0">{{ bookings|selectattr('status.value', 'equalto', 'COMPLETED')|list|length }}</h3>
                             </div>
                         </div>
                     </div>
@@ -117,7 +117,7 @@
                         <div class="card bg-info text-white">
                             <div class="card-body">
                                 <h5 class="card-title">Confirmed</h5>
-                                <h3 class="mb-0">{{ bookings|selectattr('status.value', 'CONFIRMED')|list|length }}</h3>
+                                <h3 class="mb-0">{{ bookings|selectattr('status.value', 'equalto', 'CONFIRMED')|list|length }}</h3>
                             </div>
                         </div>
                     </div>
@@ -125,7 +125,7 @@
                         <div class="card bg-warning text-white">
                             <div class="card-body">
                                 <h5 class="card-title">Pending</h5>
-                                <h3 class="mb-0">{{ bookings|selectattr('status.value', 'PENDING')|list|length }}</h3>
+                                <h3 class="mb-0">{{ bookings|selectattr('status.value', 'equalto', 'PENDING')|list|length }}</h3>
                             </div>
                         </div>
                     </div>
@@ -210,11 +210,11 @@
                                         </td>
                                         <td>
                                             <div class="btn-group btn-group-sm" role="group">
-                                                <button type="button" class="btn btn-outline-primary" onclick="viewBookingDetails({{ b.id }})" title="View Details">
+                                                <button type="button" class="btn btn-outline-primary" onclick="viewBookingDetails('{{ b.id }}')" title="View Details">
                                                     <i class="fa fa-eye"></i>
                                                 </button>
                                                 {% if b.status.value in ['PENDING', 'CONFIRMED'] %}
-                                                    <button type="button" class="btn btn-outline-danger" onclick="cancelBooking({{ b.id }})" title="Cancel Booking">
+                                                    <button type="button" class="btn btn-outline-danger" onclick="cancelBooking('{{ b.id }}')" title="Cancel Booking">
                                                         <i class="fa fa-times"></i>
                                                     </button>
                                                 {% endif %}
