@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Create Invoice - Piston Automotive Garage</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .invoice-form {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+        .item-row {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .btn-add-item {
+            background: #28a745;
+            border: none;
+            color: white;
+        }
+        .btn-add-item:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <!-- Admin Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow sticky-top p-0">
+        <div class="container-fluid px-4">
+            <a href="{{ url_for('admin_dashboard') }}" class="navbar-brand d-flex align-items-center">
+                <h2 class="m-0 text-primary"><i class="fa fa-car me-3"></i>Piston Automotive Garage</h2>
+            </a>
+            <div class="navbar-nav ms-auto">
+                <div class="navbar-nav">
+                    <a href="{{ url_for('admin_dashboard') }}" class="nav-item nav-link">Dashboard</a>
+                    <a href="{{ url_for('admin_bookings') }}" class="nav-item nav-link">Bookings</a>
+                    <a href="{{ url_for('admin_stock') }}" class="nav-item nav-link">Stock</a>
+                    <a href="{{ url_for('admin_invoicing') }}" class="nav-item nav-link active">Invoicing</a>
+                    <a href="{{ url_for('admin_financial_reports') }}" class="nav-item nav-link">Reports</a>
+                    <div class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fa fa-user me-2"></i>Admin
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{{ url_for('admin_register') }}">
+                                <i class="fa fa-user-plus me-2"></i>Register Admin
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                <i class="fa fa-sign-out-alt me-2"></i>Logout
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <!-- Navbar End -->
+
+    <div class="container py-5">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert-container mb-4">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                            <i class="fa fa-{{ 'exclamation-triangle' if category == 'error' else 'info-circle' }} me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="invoice-form">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="mb-0">
+                            <i class="fa fa-file-invoice-dollar me-2 text-primary"></i>Create New Invoice
+                        </h3>
+                        <a href="{{ url_for('admin_invoicing') }}" class="btn btn-secondary">
+                            <i class="fa fa-arrow-left me-2"></i>Back to Invoices
+                        </a>
+                    </div>
+
+                    <form method="POST" id="invoiceForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Customer Name *</label>
+                                <input type="text" class="form-control" name="customer_name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Customer Email *</label>
+                                <input type="email" class="form-control" name="customer_email" required>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Customer Phone</label>
+                                <input type="tel" class="form-control" name="customer_phone">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Issue Date *</label>
+                                <input type="date" class="form-control" name="issue_date" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Due Date *</label>
+                                <input type="date" class="form-control" name="due_date" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" name="notes" rows="3"></textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <h5 class="mb-3">
+                                <i class="fa fa-list me-2 text-info"></i>Invoice Items
+                            </h5>
+                            <div id="itemsContainer">
+                                <div class="item-row">
+                                    <div class="row g-3 align-items-end">
+                                        <div class="col-md-4">
+                                            <label class="form-label">Product</label>
+                                            <select class="form-select product-select" name="items[]" required>
+                                                <option value="">Select Product</option>
+                                                {% for product in products %}
+                                                    <option value="{{ product.id }}">{{ product.name }} - KES {{ "{:,.2f}".format(product.selling_price) }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Description</label>
+                                            <input type="text" class="form-control" name="items[]" placeholder="Enter description">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">Quantity</label>
+                                            <input type="number" class="form-control" name="items[]" min="1" value="1" required>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">&nbsp;</label>
+                                            <button type="button" class="btn btn-danger btn-sm" onclick="removeItem(this)">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-add-item btn-sm" onclick="addItem()">
+                                <i class="fa fa-plus me-2"></i>Add Item
+                            </button>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fa fa-save me-2"></i>Create Invoice
+                                </button>
+                            </div>
+                            <div class="col-6">
+                                <a href="{{ url_for('admin_invoicing') }}" class="btn btn-secondary w-100">
+                                    <i class="fa fa-times me-2"></i>Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        function addItem() {
+            const container = document.getElementById('itemsContainer');
+            const itemRow = document.createElement('div');
+            itemRow.className = 'item-row';
+            itemRow.innerHTML = `
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label">Product</label>
+                        <select class="form-select product-select" name="items[]" required>
+                            <option value="">Select Product</option>
+                            {% for product in products %}
+                                <option value="{{ product.id }}">{{ product.name }} - KES {{ "{:,.2f}".format(product.selling_price) }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Description</label>
+                        <input type="text" class="form-control" name="items[]" placeholder="Enter description">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" class="form-control" name="items[]" min="1" value="1" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="removeItem(this)">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(itemRow);
+        }
+
+        function removeItem(button) {
+            const itemRow = button.closest('.item-row');
+            itemRow.remove();
+        }
+
+        // Auto-calculate totals when products or quantities change
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('product-select') || e.target.classList.contains('form-control') && e.target.name === 'items[]') {
+                calculateTotals();
+            }
+        });
+
+        function calculateTotals() {
+            // This would calculate and display running totals
+            // For now, just ensure at least one item exists
+            const items = document.querySelectorAll('#itemsContainer .item-row');
+            if (items.length === 0) {
+                alert('Please add at least one item to the invoice.');
+                return false;
+            }
+            return true;
+        }
+
+        // Form validation
+        document.getElementById('invoiceForm').addEventListener('submit', function(e) {
+            if (!calculateTotals()) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

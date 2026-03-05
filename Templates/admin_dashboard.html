@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title> Piston Automotive Garage</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="admin dashboard, automotive management, piston auto" name="keywords">
+    <meta content="Professional admin dashboard for Piston Automotive Garage management system" name="description">
+
+    <!-- Favicon -->
+    <link href="/img/favicon.ico" rel="icon">
+
+    <!-- Google Web Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700&family=Ubuntu:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Icon Font Stylesheet -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Libraries Stylesheet -->
+    <link href="/lib/animate/animate.min.css" rel="stylesheet">
+    <link href="/lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
+    <link href="/lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css" rel="stylesheet" />
+
+    <!-- Customized Bootstrap Stylesheet -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Template Stylesheet -->
+    <link href="/css/style.css" rel="stylesheet">
+    
+    <!-- Custom Admin Dashboard Styles -->
+    <style>
+        .admin-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            overflow: hidden;
+            position: relative;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .stat-icon.users { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .stat-icon.bookings { background: linear-gradient(135deg, #f093fb, #f5576c); color: white; }
+        .stat-icon.products { background: linear-gradient(135deg, #4facfe, #00f2fe); color: white; }
+        .stat-icon.sales { background: linear-gradient(135deg, #43e97b, #38f9d7); color: white; }
+        .clickable-stat {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .clickable-stat:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        }
+        .clickable-stat::after {
+            content: '';
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 8px;
+            height: 8px;
+            background: #007bff;
+            border-radius: 50%;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+        .clickable-stat:hover::after {
+            opacity: 1;
+        }
+        .quick-action-card {
+            border: none;
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+        .quick-action-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            color: inherit;
+        }
+        .quick-action-card i {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        .admin-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        .navbar-admin {
+            background: white !important;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+        .navbar-admin .navbar-brand {
+            color: #667eea !important;
+            font-weight: 700;
+        }
+        .navbar-admin .nav-link.active {
+            color: #667eea !important;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mt-4">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Admin Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-admin navbar-light shadow sticky-top p-0">
+        <div class="container-fluid px-4">
+            <a href="{{ url_for('landing') }}" class="navbar-brand d-flex align-items-center">
+                <h2 class="m-0"><i class="fa fa-car me-3"></i>Piston Automotive Garage</h2>
+            </a>
+            
+            <div class="navbar-nav ms-auto d-flex flex-row align-items-center">
+                <div class="admin-badge me-3">
+                    <i class="fa fa-shield-alt me-2"></i>Administrator
+                </div>
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fa fa-user-cog me-2"></i>{{ session.username }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{{ url_for('admin_register') }}">
+                            <i class="fa fa-user-plus me-2"></i>Register Admin
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                            <i class="fa fa-sign-out-alt me-2"></i>Logout
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Admin Header -->
+    <div class="admin-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <p class="lead mb-0">Welcome back, <strong>{{ session.username }}</strong>! Manage your automotive garage operations with powerful tools and insights.</p>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <div class="text-white">
+                        <h5 class="mb-1" id="current-time"></h5>
+                        <p class="mb-0 opacity-75">System Monitoring</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mb-5">
+        <!-- Navigation Tabs -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <ul class="nav nav-pills nav-fill bg-light rounded p-2">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('admin_dashboard') }}">
+                            <i class="fa fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_bookings') }}">
+                            <i class="fa fa-calendar-alt me-2"></i>Bookings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_stock') }}">
+                            <i class="fa fa-boxes me-2"></i>Stock
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_financial_reports') }}">
+                            <i class="fa fa-chart-line me-2"></i>Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_invoicing') }}">
+                            <i class="fa fa-file-invoice-dollar me-2"></i>Invoicing
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Enhanced Statistics Cards -->
+        <div class="row g-4 mb-5">
+            <div class="col-lg-3 col-md-6">
+                <div class="card stat-card h-100 clickable-stat" onclick="viewUsersDetails()" style="cursor: pointer;">
+                    <div class="card-body text-center">
+                        <div class="stat-icon users mx-auto">
+                            <i class="fa fa-users"></i>
+                        </div>
+                        <h6 class="text-muted mb-2">Total Users</h6>
+                        <h2 class="fw-bold mb-0">{{ total_users }}</h2>
+                        <small class="text-success">
+                            <i class="fa fa-arrow-up me-1"></i>Active System
+                        </small>
+                        <div class="mt-2">
+                            <small class="text-primary">
+                                <i class="fa fa-info-circle me-1"></i>Click to view details
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="card stat-card h-100 clickable-stat" onclick="viewBookingsDetails()" style="cursor: pointer;">
+                    <div class="card-body text-center">
+                        <div class="stat-icon bookings mx-auto">
+                            <i class="fa fa-calendar-check"></i>
+                        </div>
+                        <h6 class="text-muted mb-2">Today's Bookings</h6>
+                        <h2 class="fw-bold mb-0">{{ today_bookings }}</h2>
+                        <small class="text-info">
+                            <i class="fa fa-clock me-1"></i>{{ total_bookings }} Total
+                        </small>
+                        <div class="mt-2">
+                            <small class="text-primary">
+                                <i class="fa fa-info-circle me-1"></i>Click to view details
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="card stat-card h-100 clickable-stat" onclick="viewSalesDetails()" style="cursor: pointer;">
+                    <div class="card-body text-center">
+                        <div class="stat-icon sales mx-auto">
+                            <i class="fa fa-dollar-sign"></i>
+                        </div>
+                        <h6 class="text-muted mb-2">Today's Sales</h6>
+                        <h2 class="fw-bold mb-0">KES {{ "{:,.0f}".format(today_sales) }}</h2>
+                        <small class="text-success">
+                            <i class="fa fa-chart-line me-1"></i>KES {{ "{:,.0f}".format(total_sales_amount) }} Total
+                        </small>
+                        <div class="mt-2">
+                            <small class="text-primary">
+                                <i class="fa fa-info-circle me-1"></i>Click to view details
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="card stat-card h-100 clickable-stat" onclick="viewProfitDetails()" style="cursor: pointer;">
+                    <div class="card-body text-center">
+                        <div class="stat-icon sales mx-auto">
+                            <i class="fa fa-chart-pie"></i>
+                        </div>
+                        <h6 class="text-muted mb-2">Gross Profit</h6>
+                        <h2 class="fw-bold mb-0">KES {{ "{:,.0f}".format(gross_profit) }}</h2>
+                        <small class="text-primary">
+                            <i class="fa fa-percentage me-1"></i>{{ "{:.1f}".format((gross_profit / total_sales_amount * 100) if total_sales_amount > 0 else 0) }}% Margin
+                        </small>
+                        <div class="mt-2">
+                            <small class="text-primary">
+                                <i class="fa fa-info-circle me-1"></i>Click to view details
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="row g-4 mb-5">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0">
+                            <i class="fa fa-chart-line me-2 text-primary"></i>Revenue Trend (6 Months)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="revenueChart" height="100"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0">
+                            <i class="fa fa-chart-pie me-2 text-info"></i>Booking Status
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="bookingStatusChart" height="150"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row g-4 mb-5">
+            <div class="col-12">
+                <h4 class="mb-4">
+                    <i class="fa fa-bolt me-2 text-primary"></i>Quick Actions
+                </h4>
+            </div>
+            
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <a href="{{ url_for('admin_bookings') }}" class="card quick-action-card bg-light h-100">
+                    <i class="fas fa-calendar-plus text-primary"></i>
+                    <h6 class="mb-2">Bookings</h6>
+                    <p class="text-muted small mb-0">Manage appointments</p>
+                </a>
+            </div>
+            
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <a href="{{ url_for('admin_stock') }}" class="card quick-action-card bg-light h-100">
+                    <i class="fas fa-box-open text-info"></i>
+                    <h6 class="mb-2">Stock</h6>
+                    <p class="text-muted small mb-0">Update inventory</p>
+                </a>
+            </div>
+            
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <a href="{{ url_for('admin_financial_reports') }}" class="card quick-action-card bg-light h-100">
+                    <i class="fas fa-chart-bar text-success"></i>
+                    <h6 class="mb-2">Reports</h6>
+                    <p class="text-muted small mb-0">View analytics</p>
+                </a>
+            </div>
+            
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <a href="{{ url_for('admin_invoicing') }}" class="card quick-action-card bg-light h-100">
+                    <i class="fas fa-file-invoice-dollar text-warning"></i>
+                    <h6 class="mb-2">Invoicing</h6>
+                    <p class="text-muted small mb-0">Manage invoices</p>
+                </a>
+            </div>
+            
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <a href="{{ url_for('admin_register') }}" class="card quick-action-card bg-light h-100">
+                    <i class="fas fa-user-shield text-danger"></i>
+                    <h6 class="mb-2">Add Admin</h6>
+                    <p class="text-muted small mb-0">Create admin</p>
+                </a>
+            </div>
+            
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <a href="#" onclick="refreshDashboard()" class="card quick-action-card bg-light h-100">
+                    <i class="fas fa-sync-alt text-secondary"></i>
+                    <h6 class="mb-2">Refresh</h6>
+                    <p class="text-muted small mb-0">Update data</p>
+                </a>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0">
+                            <i class="fa fa-history me-2 text-primary"></i>Recent Activity
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Recent Bookings -->
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3">Recent Bookings (Last 7 Days)</h6>
+                            {% if recent_bookings %}
+                                {% for booking in recent_bookings %}
+                                <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                                    <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-3">
+                                        <i class="fa fa-calendar text-white"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">{{ booking.customer_name }}</h6>
+                                                <p class="text-muted mb-0 small">{{ booking.service_type }} - {{ booking.service_date.strftime('%Y-%m-%d') }}</p>
+                                            </div>
+                                            <span class="badge bg-{{ 'success' if booking.status.value == 'COMPLETED' else 'warning' if booking.status.value == 'CONFIRMED' else 'info' }}">
+                                                {{ booking.status.value.replace('_', ' ').title() }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted">No recent bookings found.</p>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Recent Sales -->
+                        <div>
+                            <h6 class="text-muted mb-3">Recent Sales (Last 7 Days)</h6>
+                            {% if recent_sales %}
+                                {% for sale, product in recent_sales %}
+                                <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                                    <div class="avatar-sm bg-success rounded-circle d-flex align-items-center justify-content-center me-3">
+                                        <i class="fa fa-shopping-cart text-white"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">{{ product.name }}</h6>
+                                                <p class="text-muted mb-0 small">{{ sale.quantity }} units - {{ sale.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                                            </div>
+                                            <strong class="text-success">KES {{ "{:,.0f}".format(sale.quantity * product.selling_price) }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted">No recent sales found.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <!-- Low Stock Alert -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0">
+                            <i class="fa fa-exclamation-triangle me-2 text-warning"></i>Low Stock Alert
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if low_stock_products %}
+                            {% for product, total_used in low_stock_products %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <h6 class="mb-0 small">{{ product.name }}</h6>
+                                    <small class="text-muted">{{ product.stock_quantity - total_used }} available</small>
+                                </div>
+                                <span class="badge bg-warning">Low</span>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">All stock levels are healthy.</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- System Info -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0">
+                            <i class="fa fa-info-circle me-2 text-info"></i>System Info
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <small class="text-muted">System Status</small>
+                            <div class="progress mt-1" style="height: 6px;">
+                                <div class="progress-bar bg-success" style="width: 100%"></div>
+                            </div>
+                            <small class="text-success">All systems operational</small>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Database</small>
+                            <div class="progress mt-1" style="height: 6px;">
+                                <div class="progress-bar bg-info" style="width: 85%"></div>
+                            </div>
+                            <small class="text-info">85% utilized</small>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Total Products</small>
+                            <p class="mb-0 fw-semibold">{{ total_products }} items</p>
+                        </div>
+                        <div class="mb-0">
+                            <small class="text-muted">Last Backup</small>
+                            <p class="mb-0 fw-semibold">Today, {{ datetime.now().strftime('%H:%M') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        
+        // Update time
+        function updateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            const timeElement = document.getElementById('current-time');
+            if (timeElement) {
+                timeElement.textContent = now.toLocaleDateString('en-US', options);
+            }
+        }
+        
+        // Initialize Charts
+        function initializeCharts() {
+            // Revenue Trend Chart
+            const revenueCtx = document.getElementById('revenueChart');
+            if (revenueCtx) {
+                // Safe JSON parsing from template
+                const monthlyLabels = JSON.parse('{{ monthly_labels | tojson | safe }}');
+                const monthlyRevenue = JSON.parse('{{ monthly_revenue | tojson | safe }}');
+                
+                new Chart(revenueCtx, {
+                    type: 'line',
+                    data: {
+                        labels: monthlyLabels,
+                        datasets: [{
+                            label: 'Monthly Revenue',
+                            data: monthlyRevenue,
+                            borderColor: 'rgb(75, 192, 192)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            tension: 0.1,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return 'Revenue: KES ' + context.parsed.y.toLocaleString();
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return 'KES ' + value.toLocaleString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Booking Status Chart
+            const bookingCtx = document.getElementById('bookingStatusChart');
+            if (bookingCtx) {
+                // Safe JSON parsing from template
+                const bookingData = JSON.parse('{{ booking_status_counts | tojson | safe }}');
+                const labels = Object.keys(bookingData);
+                const data = Object.values(bookingData);
+                
+                new Chart(bookingCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels.map(function(label) {
+                            return label.replace('_', ' ').replace(/\b\w/g, function(l) {
+                                return l.toUpperCase();
+                            });
+                        }),
+                        datasets: [{
+                            data: data,
+                            backgroundColor: [
+                                '#FF6384',
+                                '#36A2EB',
+                                '#FFCE56',
+                                '#4BC0C0',
+                                '#9966FF'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Statistics card click functions
+        function viewUsersDetails() {
+            // Navigate to users page
+            window.location.href = '{{ url_for("admin_users") }}';
+        }
+
+        function viewBookingsDetails() {
+            // Show bookings details modal or navigate to bookings page
+            window.location.href = '{{ url_for("admin_bookings") }}';
+        }
+
+        function viewSalesDetails() {
+            // Navigate to sales page
+            window.location.href = '{{ url_for("admin_sales") }}';
+        }
+
+        function viewProfitDetails() {
+            // Show profit details modal or navigate to financial reports
+            window.location.href = '{{ url_for("admin_financial_reports") }}';
+        }
+
+        // Refresh dashboard
+        function refreshDashboard() {
+            location.reload();
+        }
+        
+        updateTime();
+        setInterval(updateTime, 60000);
+        
+        // Initialize charts when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+        });
+    </script>
+</body>
+
+</html>
+

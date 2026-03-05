@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>My Bookings - Piston Automotive Garage</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="my bookings, service appointments, piston auto" name="keywords">
+    <meta content="View and manage your service bookings at Piston Automotive Garage" name="description">
+
+    <!-- Favicon -->
+    <link href="/img/favicon.ico" rel="icon">
+
+    <!-- Google Web Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700&family=Ubuntu:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Icon Font Stylesheet -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Libraries Stylesheet -->
+    <link href="/lib/animate/animate.min.css" rel="stylesheet">
+    <link href="/lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
+
+    <!-- Customized Bootstrap Stylesheet -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Template Stylesheet -->
+    <link href="/css/style.css" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mt-4">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Navbar Start -->
+    <nav class="navbar navbar-expand-lg bg-white navbar-light shadow sticky-top p-0">
+        <a href="{{ url_for('landing') }}" class="navbar-brand d-flex align-items-center px-4 px-lg-5">
+            <h2 class="m-0 text-primary"><i class="fa fa-car me-3"></i>Piston Automotive Garage</h2>
+        </a>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+            <div class="navbar-nav ms-auto p-4 p-lg-0">
+                <a href="{{ url_for('landing') }}" class="nav-item nav-link">Home</a>
+                <a href="{{ url_for('user_dashboard') }}" class="nav-item nav-link active">Dashboard</a>
+                <a href="{{ url_for('book_service') }}" class="nav-item nav-link">Book Service</a>
+                <a href="{{ url_for('my_bookings') }}" class="nav-item nav-link active">My Bookings</a>
+                <a href="{{ url_for('logout') }}" class="nav-item nav-link">Logout</a>
+            </div>
+        </div>
+    </nav>
+    <!-- Navbar End -->
+
+    <!-- My Bookings Start -->
+    <div class="container py-5">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert-container mb-4">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                            <i class="fa fa-{{ 'exclamation-triangle' if category == 'error' else 'info-circle' }} me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="fade-in">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-2">
+                        <i class="fa fa-calendar-check me-2 text-primary"></i>My Bookings
+                    </h2>
+                    <p class="text-muted mb-0">Manage and track your vehicle service appointments</p>
+                </div>
+                <a href="{{ url_for('book_service') }}" class="btn btn-primary">
+                    <i class="fa fa-plus me-2"></i>New Booking
+                </a>
+            </div>
+
+            {% if bookings %}
+                <!-- Bookings Summary -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Bookings</h5>
+                                <h3 class="mb-0">{{ bookings|length }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h5 class="card-title">Completed</h5>
+                                <h3 class="mb-0">{{ bookings|selectattr('status.value', 'COMPLETED')|list|length }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <h5 class="card-title">Confirmed</h5>
+                                <h3 class="mb-0">{{ bookings|selectattr('status.value', 'CONFIRMED')|list|length }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body">
+                                <h5 class="card-title">Pending</h5>
+                                <h3 class="mb-0">{{ bookings|selectattr('status.value', 'PENDING')|list|length }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bookings Table -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0">
+                        <h5 class="mb-0">
+                            <i class="fa fa-list me-2 text-primary"></i>Booking Details
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th><i class="fa fa-calendar me-2"></i>Date</th>
+                                        <th><i class="fa fa-wrench me-2"></i>Service</th>
+                                        <th><i class="fa fa-car me-2"></i>Vehicle</th>
+                                        <th><i class="fa fa-info-circle me-2"></i>Status</th>
+                                        <th><i class="fa fa-user me-2"></i>Customer</th>
+                                        <th><i class="fa fa-envelope me-2"></i>Email</th>
+                                        <th><i class="fa fa-phone me-2"></i>Phone</th>
+                                        <th><i class="fa fa-cog me-2"></i>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for b in bookings %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fa fa-calendar text-primary me-2"></i>
+                                                <div>
+                                                    <strong>{{ b.service_date.strftime('%b %d, %Y') }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">{{ b.service_date.strftime('%I:%M %p') }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fa fa-wrench text-info me-2"></i>
+                                                <span class="badge bg-primary">{{ b.service_type }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fa fa-car text-secondary me-2"></i>
+                                                {{ b.vehicle_type or 'Not specified' }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% set status_class = {
+                                                'PENDING': 'warning',
+                                                'CONFIRMED': 'info', 
+                                                'IN_PROGRESS': 'primary',
+                                                'COMPLETED': 'success',
+                                                'CANCELLED': 'danger'
+                                            } %}
+                                            <span class="badge bg-{{ status_class.get(b.status.value, 'secondary') }} text-white">
+                                                {{ b.status.value.replace('_', ' ').title() }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fa fa-user text-primary me-2"></i>
+                                                {{ b.customer_name }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fa fa-envelope text-info me-2"></i>
+                                                <a href="mailto:{{ b.email }}" class="text-decoration-none">{{ b.email }}</a>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fa fa-phone text-success me-2"></i>
+                                                <a href="tel:{{ b.phone }}" class="text-decoration-none">{{ b.phone }}</a>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <button type="button" class="btn btn-outline-primary" onclick="viewBookingDetails({{ b.id }})" title="View Details">
+                                                    <i class="fa fa-eye"></i>
+                                                </button>
+                                                {% if b.status.value in ['PENDING', 'CONFIRMED'] %}
+                                                    <button type="button" class="btn btn-outline-danger" onclick="cancelBooking({{ b.id }})" title="Cancel Booking">
+                                                        <i class="fa fa-times"></i>
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% if b.special_request %}
+                                    <tr>
+                                        <td colspan="9" class="bg-light">
+                                            <div class="p-3">
+                                                <i class="fa fa-comment text-warning me-2"></i>
+                                                <strong>Special Request:</strong> {{ b.special_request }}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="fa fa-calendar-times fa-4x text-muted"></i>
+                    </div>
+                    <h4 class="text-muted mb-3">No Bookings Found</h4>
+                    <p class="text-muted mb-4">You haven't made any service bookings yet.</p>
+                    <a href="{{ url_for('book_service') }}" class="btn btn-primary btn-lg">
+                        <i class="fa fa-plus me-2"></i>Book Your First Service
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <!-- My Bookings End -->
+
+    <!-- Booking Details Modal -->
+    <div class="modal fade" id="bookingDetailsModal" tabindex="-1" aria-labelledby="bookingDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="bookingDetailsModalLabel">
+                        <i class="fa fa-info-circle me-2"></i>Booking Details
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="bookingDetailsContent">
+                    <!-- Booking details will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Start -->
+    <div class="container-fluid bg-dark text-light footer pt-5 mt-5">
+        <div class="container py-5">
+            <div class="row g-5">
+                <div class="col-lg-3 col-md-6">
+                    <h4 class="text-light mb-4">Address</h4>
+                    <p class="mb-2"><i class="fa fa-map-marker-alt me-3"></i>Mesora lane,Buru-Buru</p>
+                    <p class="mb-2"><i class="fa fa-phone-alt me-3"></i>0115253530</p>
+                    <p class="mb-2"><i class="fa fa-envelope me-3"></i>info@pistonauto.com</p>
+                    <div class="d-flex pt-2">
+                        <a class="btn btn-outline-light btn-social" href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a class="btn btn-outline-light btn-social" href="#"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <h4 class="text-light mb-4">Opening Hours</h4>
+                    <h6 class="text-light">Monday - Friday:</h6>
+                    <p class="mb-4">08.00 AM - 08.00 PM</p>
+                    <h6 class="text-light">Saturday </h6>
+                    <p class="mb-0">10.00 AM - 06.00 PM</p>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <h4 class="text-light mb-4">Service</h4>
+                    <a class="btn btn-link" href="">Diagnostics</a>
+                    <a class="btn btn-link" href="">General Servicing</a>
+                    <a class="btn btn-link" href="">repair</a>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="position-relative mx-auto" style="max-width: 400px;">                      
+                </div>
+            </div>
+        </div>
+        <div class="container">
+            <div class="copyright">
+                <div class="row">
+                    <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+                        &copy; <a class="border-bottom" href="#">2026 Piston Automotive Garage</a>
+        Designed By <a class="border-bottom" href="">Mg tech</a>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Footer End -->
+
+    <!-- Back to Top -->
+    <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // View booking details
+        function viewBookingDetails(bookingId) {
+            const modal = new bootstrap.Modal(document.getElementById('bookingDetailsModal'));
+            const content = document.getElementById('bookingDetailsContent');
+            
+            // Sample booking details (in real app, fetch from server)
+            content.innerHTML = `
+                <div class="booking-details">
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>Booking ID:</strong> #${bookingId}
+                        </div>
+                        <div class="col-6">
+                            <strong>Status:</strong> <span class="badge bg-info">Confirmed</span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>Service Date:</strong> 2024-03-15
+                        </div>
+                        <div class="col-6">
+                            <strong>Service Time:</strong> 10:00 AM
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <strong>Service Type:</strong> Full Service & Oil Change
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <strong>Vehicle:</strong> Toyota Corolla - KAB 123X
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <strong>Special Requests:</strong> Please check brake pads
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <strong>Contact:</strong> +254 712 345 678
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modal.show();
+        }
+
+        // Cancel booking
+        function cancelBooking(bookingId) {
+            if (confirm('Are you sure you want to cancel this booking? This action cannot be undone.')) {
+                // In a real implementation, this would make an AJAX call to cancel the booking
+                alert('Booking #' + bookingId + ' has been cancelled.');
+                // Reload page to show updated status
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            }
+        }
+
+        // Add animations on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate summary cards
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 100 + (index * 100));
+            });
+
+            // Animate main content
+            const fadeElements = document.querySelectorAll('.fade-in > *');
+            fadeElements.forEach((element, index) => {
+                element.style.opacity = '0';
+                element.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    element.style.transition = 'all 0.6s ease';
+                    element.style.opacity = '1';
+                    element.style.transform = 'translateY(0)';
+                }, 400 + (index * 100));
+            });
+        });
+    </script>
+</body>
+
+</html>

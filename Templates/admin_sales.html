@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Analytics - Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <style>
+        .sales-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid #28a745;
+        }
+        .sales-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .revenue-card {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+        .cost-card {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+        .profit-card {
+            background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+        .sales-chart {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Admin Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('admin_dashboard') }}">
+                <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_dashboard') }}">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_users') }}">
+                            <i class="fas fa-users me-1"></i>Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_bookings') }}">
+                            <i class="fas fa-calendar me-1"></i>Bookings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('admin_sales') }}">
+                            <i class="fas fa-shopping-cart me-1"></i>Sales
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_stock') }}">
+                            <i class="fas fa-warehouse me-1"></i>Stock
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_financial_reports') }}">
+                            <i class="fas fa-chart-line me-1"></i>Financial Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_invoicing') }}">
+                            <i class="fas fa-file-invoice me-1"></i>Invoicing
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user me-1"></i>{{ session.username }}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('logout') }}">
+                                <i class="fas fa-sign-out-alt me-1"></i>Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2><i class="fas fa-shopping-cart me-2"></i>Sales Analytics</h2>
+                        <p class="text-muted">View sales performance, revenue trends, and product analytics</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-success" onclick="exportSales()">
+                            <i class="fas fa-download me-2"></i>Export Sales
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="refreshSales()">
+                            <i class="fas fa-sync-alt me-2"></i>Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="revenue-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">KES {{ "{:,.2f}".format(total_revenue) }}</h3>
+                            <p class="mb-0">Total Revenue</p>
+                        </div>
+                        <div>
+                            <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="cost-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">KES {{ "{:,.2f}".format(total_cost) }}</h3>
+                            <p class="mb-0">Total Cost</p>
+                        </div>
+                        <div>
+                            <i class="fas fa-coins fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="profit-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">KES {{ "{:,.2f}".format(total_profit) }}</h3>
+                            <p class="mb-0">Total Profit</p>
+                        </div>
+                        <div>
+                            <i class="fas fa-chart-pie fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales Chart -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="sales-chart">
+                    <h5 class="mb-3">Sales Overview</h5>
+                    <canvas id="salesChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales Table -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Sales</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Sale ID</th>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Revenue</th>
+                                <th>Cost</th>
+                                <th>Profit</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in sales_data %}
+                            <tr>
+                                <td>{{ sale.id }}</td>
+                                <td>{{ sale.name }}</td>
+                                <td>{{ sale.quantity }}</td>
+                                <td>KES {{ "{:,.2f}".format(sale.selling_price) }}</td>
+                                <td class="text-success">KES {{ "{:,.2f}".format(sale.revenue) }}</td>
+                                <td class="text-danger">KES {{ "{:,.2f}".format(sale.cost) }}</td>
+                                <td class="text-primary">KES {{ "{:,.2f}".format(sale.profit) }}</td>
+                                <td>{{ sale.created_at.strftime('%Y-%m-%d %H:%M') if sale.created_at else 'N/A' }}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewSale({{ sale.id }})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-warning" onclick="editSale({{ sale.id }})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="9" class="text-center text-muted">
+                                    <i class="fas fa-shopping-cart fa-3x mb-3"></i>
+                                    <p>No sales found in the system.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Initialize sales chart
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        const salesChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Revenue',
+                    data: [12000, 19000, 15000, 25000, 22000, 30000],
+                    borderColor: '#28a745',
+                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                    tension: 0.4
+                }, {
+                    label: 'Profit',
+                    data: [3000, 5000, 4000, 8000, 7000, 10000],
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'KES ' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        function refreshSales() {
+            location.reload();
+        }
+
+        function exportSales() {
+            window.location.href = '{{ url_for("export_financial_reports") }}';
+        }
+
+        function viewSale(saleId) {
+            // In a full implementation, this would open a modal with sale details
+            alert(`View Sale ID: ${saleId} - This would show detailed sale information.`);
+        }
+
+        function editSale(saleId) {
+            // In a full implementation, this would open an edit form
+            alert(`Edit Sale ID: ${saleId} - This would open an edit form.`);
+        }
+    </script>
+</body>
+</html>

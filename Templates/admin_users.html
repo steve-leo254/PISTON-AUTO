@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users Management - Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <style>
+        .user-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid #007bff;
+        }
+        .user-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .role-badge {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- Admin Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('admin_dashboard') }}">
+                <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_dashboard') }}">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('admin_users') }}">
+                            <i class="fas fa-users me-1"></i>Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_bookings') }}">
+                            <i class="fas fa-calendar me-1"></i>Bookings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_sales') }}">
+                            <i class="fas fa-shopping-cart me-1"></i>Sales
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_stock') }}">
+                            <i class="fas fa-warehouse me-1"></i>Stock
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_financial_reports') }}">
+                            <i class="fas fa-chart-line me-1"></i>Financial Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_invoicing') }}">
+                            <i class="fas fa-file-invoice me-1"></i>Invoicing
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user me-1"></i>{{ session.username }}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('logout') }}">
+                                <i class="fas fa-sign-out-alt me-1"></i>Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2><i class="fas fa-users me-2"></i>Users Management</h2>
+                        <p class="text-muted">Manage system users, roles, and permissions</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-secondary" onclick="refreshUsers()">
+                            <i class="fas fa-sync-alt me-2"></i>Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">{{ users|length }}</h3>
+                            <p class="mb-0">Total Users</p>
+                        </div>
+                        <div>
+                            <i class="fas fa-users fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">{{ users|selectattr('role.value', 'equalto', 'ADMIN')|list|length }}</h3>
+                            <p class="mb-0">Admin Users</p>
+                        </div>
+                        <div>
+                            <i class="fas fa-user-shield fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">{{ users|selectattr('role.value', 'equalto', 'USER')|list|length }}</h3>
+                            <p class="mb-0">Regular Users</p>
+                        </div>
+                        <div>
+                            <i class="fas fa-user fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="mb-0">{{ users|length }}</h3>
+                            <p class="mb-0">Active Users</p>
+                        </div>
+                        <div>
+                            <i class="fas fa-user-check fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">All Users</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>User ID</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="user-avatar me-3">
+                                            {{ user.username[0].upper() }}
+                                        </div>
+                                        <div>
+                                            <strong>{{ user.username }}</strong>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    <span class="badge role-badge {{ 'bg-danger' if user.role.value == 'ADMIN' else 'bg-primary' }}">
+                                        {{ user.role.value }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">
+                                        Active
+                                    </span>
+                                </td>
+                                <td>User ID: {{ user.id }}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewUser({{ user.id }})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-warning" onclick="editUser({{ user.id }})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        {% if user.role.value != 'ADMIN' %}
+                                        <button class="btn btn-sm btn-outline-danger" onclick="toggleUserStatus({{ user.id }})">
+                                            <i class="fas fa-{{ 'ban' if user.is_active else 'check' }}"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">
+                                    <i class="fas fa-users fa-3x mb-3"></i>
+                                    <p>No users found in the system.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function refreshUsers() {
+            location.reload();
+        }
+
+        function viewUser(userId) {
+            // In a full implementation, this would open a modal with user details
+            alert(`View User ID: ${userId} - This would show detailed user information.`);
+        }
+
+        function editUser(userId) {
+            // In a full implementation, this would open an edit form
+            alert(`Edit User ID: ${userId} - This would open an edit form.`);
+        }
+
+        function toggleUserStatus(userId) {
+            if (confirm('Are you sure you want to toggle this user\'s status?')) {
+                // In a full implementation, this would make an AJAX call to update status
+                alert(`Toggle User Status ID: ${userId} - This would update the user status.`);
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>

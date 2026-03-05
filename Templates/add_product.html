@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Add Product - Piston Automotive Garage</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .product-form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .form-floating label {
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <!-- Admin Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow sticky-top p-0">
+        <div class="container-fluid px-4">
+            <a href="{{ url_for('admin_dashboard') }}" class="navbar-brand d-flex align-items-center">
+                <h2 class="m-0 text-primary"><i class="fa fa-car me-3"></i>Piston Automotive Garage</h2>
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-item nav-link">Dashboard</a>
+                <a href="{{ url_for('admin_stock') }}" class="nav-item nav-link active">Stock</a>
+                <a href="{{ url_for('logout') }}" class="nav-item nav-link text-danger">Logout</a>
+            </div>
+        </div>
+    </nav>
+    <!-- Navbar End -->
+
+    <div class="container py-5">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert-container mb-4">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                            <i class="fa fa-{{ 'exclamation-triangle' if category == 'error' else 'info-circle' }} me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">
+                            <i class="fa fa-plus me-2"></i>Add New Service Part
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" class="product-form">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="form-floating mb-3">
+                                        <input type="text" class="form-control" id="name" name="name" placeholder="Product Name" required>
+                                        <label for="name">Product Name</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <select class="form-select" id="category" name="category" required>
+                                            <option value="">Select Category</option>
+                                            <option value="engine">Engine Parts</option>
+                                            <option value="brakes">Brakes</option>
+                                            <option value="filters">Filters</option>
+                                            <option value="fluids">Fluids</option>
+                                            <option value="electrical">Electrical</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                        <label for="category">Category</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <input type="number" step="0.01" class="form-control" id="buying_price" name="buying_price" placeholder="0.00" required>
+                                        <label for="buying_price">Purchase Price (KES)</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <input type="number" class="form-control" id="stock_quantity" name="stock_quantity" placeholder="0" required>
+                                        <label for="stock_quantity">Stock Quantity</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="form-floating mb-3">
+                                        <textarea class="form-control" id="description" name="description" placeholder="Product description (optional)" style="height: 100px;"></textarea>
+                                        <label for="description">Description</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fa fa-save me-2"></i>Save Product
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <a href="{{ url_for('admin_stock') }}" class="btn btn-secondary w-100">
+                                        <i class="fa fa-times me-2"></i>Cancel
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
