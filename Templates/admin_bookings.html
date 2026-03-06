@@ -181,14 +181,13 @@
                     <table class="table table-hover" id="bookingsTable">
                         <thead class="table-dark">
                             <tr>
-                                <th>Booking ID</th>
-                                <th>Customer</th>
-                                <th>Contact</th>
+                                <th>Date</th>
                                 <th>Service</th>
                                 <th>Vehicle</th>
-                                <th>Service Date</th>
                                 <th>Status</th>
-                                <th>Priority</th>
+                                <th>Customer</th>
+                                <th>Email</th>
+                                <th>Phone</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -198,35 +197,17 @@
                                 {% set username = row[1] %}
                                 <tr class="booking-row {% if booking.service_date.date() == datetime.now().date() %}priority-high{% elif booking.service_date.date() <= datetime.now().date() + timedelta(days=3) %}priority-medium{% else %}priority-low{% endif %}">
                                     <td>
-                                        <strong>#{{ booking.id }}</strong>
-                                        <br><small class="text-muted">{{ booking.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-2">
-                                                <i class="fa fa-user text-white"></i>
-                                            </div>
-                                            <div>
-                                                <strong>{{ booking.customer_name }}</strong>
-                                                <br><small class="contact-info">{{ username }}</small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="contact-info">
-                                            <i class="fa fa-envelope me-1"></i>{{ booking.email }}<br>
-                                            <i class="fa fa-phone me-1"></i>{{ booking.phone or 'N/A' }}
-                                        </div>
+                                        <div>{{ booking.service_date.strftime('%b %d, %Y') }}</div>
+                                        <small class="text-muted">{{ booking.service_date.strftime('%I:%M %p') }}</small>
                                     </td>
                                     <td>
                                         <strong>{{ booking.service_type }}</strong>
                                         {% if booking.special_request %}
-                                            <br><small class="text-muted">{{ booking.special_request[:50] }}{% if booking.special_request|length > 50 %}...{% endif %}</small>
+                                            <br><small class="text-muted">Special Request: {{ booking.special_request }}</small>
                                         {% endif %}
                                     </td>
                                     <td>
                                         <i class="fa fa-car me-1"></i>{{ booking.vehicle_type or 'N/A' }}
-                                        <br><small class="text-muted">{{ booking.service_date.strftime('%Y-%m-%d') }}</small>
                                     </td>
                                     <td>
                                         <span class="status-badge status-{{ booking.status.value.lower().replace('_', '-') }}">
@@ -234,13 +215,14 @@
                                         </span>
                                     </td>
                                     <td>
-                                        {% if booking.service_date.date() == datetime.now().date() %}
-                                            <span class="badge bg-danger">Today</span>
-                                        {% elif booking.service_date.date() <= datetime.now().date() + timedelta(days=3) %}
-                                            <span class="badge bg-warning">Soon</span>
-                                        {% else %}
-                                            <span class="badge bg-success">Scheduled</span>
-                                        {% endif %}
+                                        <strong>{{ booking.customer_name }}</strong>
+                                        <br><small class="text-muted">{{ username }}</small>
+                                    </td>
+                                    <td>
+                                        <i class="fa fa-envelope me-1"></i>{{ booking.email }}
+                                    </td>
+                                    <td>
+                                        <i class="fa fa-phone me-1"></i>{{ booking.phone or 'N/A' }}
                                     </td>
                                     <td>
                                         <div class="btn-group" role="group">

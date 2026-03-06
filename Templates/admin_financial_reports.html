@@ -133,7 +133,7 @@
                             <div>
                                 <h6 class="mb-2">Total Revenue</h6>
                                 <h3 class="mb-0">Ksh {{ "{:,.2f}".format(total_revenue) }}</h3>
-                                <small><i class="fas fa-arrow-up me-1"></i>+12.5% from last month</small>
+                                <small><i class="fas fa-arrow-{{ 'up' if revenue_change > 0 else 'down' if revenue_change < 0 else 'right' }} me-1"></i>{{ revenue_change > 0 and '+' or '' }}{{ "{:.1f}".format(revenue_change) }}% from last month</small>
                             </div>
                             <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
                         </div>
@@ -147,7 +147,7 @@
                             <div>
                                 <h6 class="mb-2">Total Costs</h6>
                                 <h3 class="mb-0">Ksh {{ "{:,.2f}".format(total_cost) }}</h3>
-                                <small><i class="fas fa-arrow-up me-1"></i>+8.3% from last month</small>
+                                <small><i class="fas fa-arrow-{{ 'up' if cost_change > 0 else 'down' if cost_change < 0 else 'right' }} me-1"></i>{{ cost_change > 0 and '+' or '' }}{{ "{:.1f}".format(cost_change) }}% from last month</small>
                             </div>
                             <i class="fas fa-shopping-cart fa-2x opacity-75"></i>
                         </div>
@@ -161,7 +161,7 @@
                             <div>
                                 <h6 class="mb-2">Gross Profit</h6>
                                 <h3 class="mb-0">Ksh {{ "{:,.2f}".format(gross_profit) }}</h3>
-                                <small><i class="fas fa-arrow-up me-1"></i>+18.7% from last month</small>
+                                <small><i class="fas fa-arrow-{{ 'up' if profit_change > 0 else 'down' if profit_change < 0 else 'right' }} me-1"></i>{{ profit_change > 0 and '+' or '' }}{{ "{:.1f}".format(profit_change) }}% from last month</small>
                             </div>
                             <i class="fas fa-chart-line fa-2x opacity-75"></i>
                         </div>
@@ -175,7 +175,7 @@
                             <div>
                                 <h6 class="mb-2">Profit Margin</h6>
                                 <h3 class="mb-0">{{ "{:.1f}".format((gross_profit / total_revenue * 100) if total_revenue > 0 else 0) }}%</h3>
-                                <small><i class="fas fa-arrow-up me-1"></i>+2.1% from last month</small>
+                                <small><i class="fas fa-arrow-{{ 'up' if profit_change > 0 else 'down' if profit_change < 0 else 'right' }} me-1"></i>{{ profit_change > 0 and '+' or '' }}{{ "{:.1f}".format(profit_change) }}% from last month</small>
                             </div>
                             <i class="fas fa-percentage fa-2x opacity-75"></i>
                         </div>

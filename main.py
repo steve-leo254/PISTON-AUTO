@@ -207,6 +207,12 @@ def admin_dashboard():
         .all()
     )
     
+    # Convert to dictionary with string keys for JSON serialization
+    booking_status_counts = {status.value: count for status, count in booking_status_counts}
+    print(f"DEBUG: booking_status_counts type: {type(booking_status_counts)}")
+    print(f"DEBUG: booking_status_counts keys: {list(booking_status_counts.keys())}")
+    print(f"DEBUG: booking_status_counts: {booking_status_counts}")
+    
     # Recent sales (last 7 days)
     recent_sales = (
         db.session.query(Sale, Product)
@@ -275,7 +281,7 @@ def admin_dashboard():
         recent_bookings=recent_bookings,
         recent_sales=recent_sales,
         low_stock_products=low_stock_products,
-        booking_status_counts=dict(booking_status_counts),
+        booking_status_counts=booking_status_counts,
         today_bookings=today_bookings,
         today_sales=today_sales,
         monthly_revenue=monthly_revenue[::-1],  # Reverse to show oldest to newest
@@ -297,8 +303,24 @@ def user_dashboard():
         .all()
     )
 
+    # Convert bookings to JSON-serializable format
+    bookings_data = {}
+    for booking in upcoming_bookings:
+        booking_dict = {
+            'id': booking.id,
+            'status': booking.status.value,
+            'service_date': booking.service_date.isoformat() if booking.service_date else None,
+            'service_type': booking.service_type,
+            'vehicle_type': booking.vehicle_type,
+            'customer_name': booking.customer_name,
+            'email': booking.email,
+            'phone': booking.phone,
+            'special_request': booking.special_request
+        }
+        bookings_data[str(booking.id)] = booking_dict
+
     return render_template(
-        'user_dashboard.html', username=username, bookings=upcoming_bookings
+        'user_dashboard.html', username=username, bookings=bookings_data
     )
 
 
@@ -521,14 +543,32 @@ def my_bookings():
     user = User.query.filter_by(username=username).first()
     print(f"DEBUG: My Bookings - User found: {user.id if user else 'None'}")
     
-    bookings = (
+    bookings_query = (
         Booking.query.filter_by(user_id=user.id)
         .order_by(Booking.service_date.desc())
-        .all()
-    )
+    ) if user else None
+    
+    bookings = {}
+    if bookings_query:
+        for booking in bookings_query.all():
+            booking_dict = {
+                'id': booking.id,
+                'user_id': booking.user_id,
+                'customer_name': booking.customer_name,
+                'email': booking.email,
+                'phone': booking.phone,
+                'vehicle_type': booking.vehicle_type,
+                'service_type': booking.service_type,
+                'service_date': booking.service_date.isoformat() if booking.service_date else None,
+                'special_request': booking.special_request,
+                'status': booking.status.value if booking.status else None,
+                'estimated_total': booking.estimated_total
+            }
+            bookings[str(booking.id)] = booking_dict
+    
     print(f"DEBUG: My Bookings - Found {len(bookings)} bookings")
-    for booking in bookings:
-        print(f"DEBUG: Booking ID: {booking.id}, Service: {booking.service_type}, Date: {booking.service_date}")
+    for booking_id, booking in bookings.items():
+        print(f"DEBUG: Booking ID: {booking['id']}, Service: {booking['service_type']}, Date: {booking['service_date']}")
     
     return render_template('my_bookings.html', bookings=bookings)
 
@@ -542,7 +582,7 @@ def admin_bookings():
         .add_columns(User.username)
         .all()
     )
-    return render_template('admin_bookings.html', bookings=bookings, timedelta=timedelta)
+    return render_template('admin_bookings.html', bookings=bookings, timedelta=timedelta, datetime=datetime)
 
 
 @app.route('/admin/users')
@@ -835,7 +875,6 @@ def add_product():
             # Create new product
             new_product = Product(
                 name=name,
-                category=category,
                 description=description,
                 buying_price=buying_price,
                 selling_price=buying_price * 1.3,  # Default markup for internal tracking
@@ -896,6 +935,19 @@ def edit_product(product_id):
 @app.route('/admin/financial-reports')
 @login_required(UserRole.ADMIN)
 def admin_financial_reports():
+    # Current month data
+    current_month = datetime.now().month
+    current_year = datetime.now().year
+    
+    # Previous month data
+    if current_month == 1:
+        prev_month = 12
+        prev_year = current_year - 1
+    else:
+        prev_month = current_month - 1
+        prev_year = current_year
+    
+    # Total revenue (current month)
     total_revenue = (
         db.session.query(
             func.coalesce(
@@ -903,9 +955,31 @@ def admin_financial_reports():
             )
         )
         .join(Product, Product.id == Sale.product_id)
+        .filter(func.extract('month', Sale.created_at) == current_month,
+                func.extract('year', Sale.created_at) == current_year)
         .scalar()
     )
-
+    
+    print(f"DEBUG: Current month: {current_month}, year: {current_year}")
+    print(f"DEBUG: Total revenue query result: {total_revenue}")
+    
+    # Previous month revenue
+    prev_revenue = (
+        db.session.query(
+            func.coalesce(
+                func.sum(Sale.quantity * Product.selling_price), 0
+            )
+        )
+        .join(Product, Product.id == Sale.product_id)
+        .filter(func.extract('month', Sale.created_at) == prev_month,
+                func.extract('year', Sale.created_at) == prev_year)
+        .scalar()
+    )
+    
+    print(f"DEBUG: Previous month: {prev_month}, year: {prev_year}")
+    print(f"DEBUG: Previous revenue query result: {prev_revenue}")
+    
+    # Total cost (current month)
     total_cost = (
         db.session.query(
             func.coalesce(
@@ -913,10 +987,31 @@ def admin_financial_reports():
             )
         )
         .join(Product, Product.id == Sale.product_id)
+        .filter(func.extract('month', Sale.created_at) == current_month,
+                func.extract('year', Sale.created_at) == current_year)
         .scalar()
     )
-
+    
+    # Previous month cost
+    prev_cost = (
+        db.session.query(
+            func.coalesce(
+                func.sum(Sale.quantity * Product.buying_price), 0
+            )
+        )
+        .join(Product, Product.id == Sale.product_id)
+        .filter(func.extract('month', Sale.created_at) == prev_month,
+                func.extract('year', Sale.created_at) == prev_year)
+        .scalar()
+    )
+    
     gross_profit = total_revenue - total_cost
+    prev_gross_profit = prev_revenue - prev_cost
+    
+    # Calculate percentage changes
+    revenue_change = ((total_revenue - prev_revenue) / prev_revenue * 100) if prev_revenue > 0 else 0
+    cost_change = ((total_cost - prev_cost) / prev_cost * 100) if prev_cost > 0 else 0
+    profit_change = ((gross_profit - prev_gross_profit) / prev_gross_profit * 100) if prev_gross_profit > 0 else 0
 
     latest_sales = (
         db.session.query(Sale, Product)
@@ -931,6 +1026,9 @@ def admin_financial_reports():
         total_revenue=total_revenue,
         total_cost=total_cost,
         gross_profit=gross_profit,
+        revenue_change=revenue_change,
+        cost_change=cost_change,
+        profit_change=profit_change,
         latest_sales=latest_sales,
     )
 
