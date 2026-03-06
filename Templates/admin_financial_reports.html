@@ -278,7 +278,7 @@
                             <div class="text-center">
                                 <h6>Gross Profit Margin</h6>
                                 <div class="progress mb-2" style="height: 25px;">
-                                    <div class="progress-bar bg-success" style="width: {{ (gross_profit / total_revenue * 100) if total_revenue > 0 else 0 }}%">
+                                    <div class="progress-bar bg-success" id="grossProfitMarginBar">
                                         {{ "{:.1f}".format((gross_profit / total_revenue * 100) if total_revenue > 0 else 0) }}%
                                     </div>
                                 </div>
@@ -288,7 +288,7 @@
                             <div class="text-center">
                                 <h6>Cost Efficiency</h6>
                                 <div class="progress mb-2" style="height: 25px;">
-                                    <div class="progress-bar bg-info" style="width: {{ ((total_revenue - total_cost) / total_revenue * 100) if total_revenue > 0 else 0 }}%">
+                                    <div class="progress-bar bg-info" id="costEfficiencyBar">
                                         {{ "{:.1f}".format(((total_revenue - total_cost) / total_revenue * 100) if total_revenue > 0 else 0) }}%
                                     </div>
                                 </div>
@@ -298,7 +298,7 @@
                             <div class="text-center">
                                 <h6>ROI</h6>
                                 <div class="progress mb-2" style="height: 25px;">
-                                    <div class="progress-bar bg-warning" style="width: {{ (gross_profit / total_cost * 100) if total_cost > 0 else 0 }}%">
+                                    <div class="progress-bar bg-warning" id="roiBar">
                                         {{ "{:.1f}".format((gross_profit / total_cost * 100) if total_cost > 0 else 0) }}%
                                     </div>
                                 </div>
@@ -316,6 +316,10 @@
     <script>
         // Initialize Charts
         document.addEventListener('DOMContentLoaded', function() {
+            // Set progress bar widths
+            document.getElementById('grossProfitMarginBar').style.width = '{{ (gross_profit / total_revenue * 100) if total_revenue > 0 else 0 }}%';
+            document.getElementById('costEfficiencyBar').style.width = '{{ ((total_revenue - total_cost) / total_revenue * 100) if total_revenue > 0 else 0 }}%';
+            document.getElementById('roiBar').style.width = '{{ (gross_profit / total_cost * 100) if total_cost > 0 else 0 }}%';
             // Revenue Trend Chart
             const revenueCtx = document.getElementById('revenueChart').getContext('2d');
             new Chart(revenueCtx, {

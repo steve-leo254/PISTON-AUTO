@@ -330,9 +330,26 @@
         // Update booking status
         function updateStatus(bookingId, newStatus) {
             if (confirm(`Are you sure you want to update booking #${bookingId} to ${newStatus.replace('_', ' ')}?`)) {
-                // In a real implementation, this would make an AJAX call to update the database
-                alert(`Booking #${bookingId} status updated to ${newStatus.replace('_', ' ')}`);
-                location.reload();
+                fetch(`/admin/bookings/update/${bookingId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification(`Booking #${bookingId} status updated to ${newStatus.replace('_', ' ')}`, 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showNotification(data.message || 'Failed to update status', 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('An error occurred while updating status', 'danger');
+                });
             }
         }
 

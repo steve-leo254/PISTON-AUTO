@@ -3,7 +3,7 @@ from functools import wraps
 from datetime import datetime, timedelta
 
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, StringField, FloatField, IntegerField, SelectField, SubmitField
@@ -27,6 +27,7 @@ from dbservice import (
     RegisterForm,
     Booking,
     BookingForm,
+    BookingStatus,
     JobPartUsage,
     Invoice,
     InvoiceStatus,
@@ -585,6 +586,36 @@ def admin_bookings():
     return render_template('admin_bookings.html', bookings=bookings, timedelta=timedelta, datetime=datetime)
 
 
+@app.route('/admin/bookings/update/<int:booking_id>', methods=['POST'])
+@login_required(UserRole.ADMIN)
+def update_booking_status(booking_id):
+    """Update booking status"""
+    
+    booking = Booking.query.get_or_404(booking_id)
+    
+    # Get new status from request
+    data = request.get_json()
+    new_status = data.get('status') if data else None
+    
+    if not new_status:
+        return jsonify({'success': False, 'message': 'Status not provided'}), 400
+    
+    # Validate status
+    try:
+        booking.status = BookingStatus[new_status]
+        db.session.commit()
+        return jsonify({
+            'success': True, 
+            'message': f'Booking status updated to {new_status}',
+            'new_status': new_status
+        })
+    except (KeyError, ValueError) as e:
+        return jsonify({'success': False, 'message': f'Invalid status: {new_status}'}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
 @app.route('/admin/users')
 @login_required(UserRole.ADMIN)
 def admin_users():
@@ -784,7 +815,6 @@ def export_stock():
         stock_data.append({
             'Product ID': product.id,
             'Product Name': product.name,
-            'Category': product.category or 'Other',
             'Description': product.description or '',
             'Buying Price': product.buying_price,
             'Selling Price': product.selling_price,
@@ -913,7 +943,8 @@ def edit_product(product_id):
             
             # Update product
             product.name = name
-            product.category = category
+            if hasattr(product, 'category'):
+                product.category = category
             product.description = description
             product.buying_price = buying_price
             product.selling_price = selling_price
@@ -935,7 +966,7 @@ def edit_product(product_id):
 @app.route('/admin/financial-reports')
 @login_required(UserRole.ADMIN)
 def admin_financial_reports():
-    # Current month data
+    # Current month data for comparison
     current_month = datetime.now().month
     current_year = datetime.now().year
     
@@ -947,7 +978,18 @@ def admin_financial_reports():
         prev_month = current_month - 1
         prev_year = current_year
     
-    # Total revenue (current month)
+    # Total revenue (all time) - for main display
+    total_revenue_all = (
+        db.session.query(
+            func.coalesce(
+                func.sum(Sale.quantity * Product.selling_price), 0
+            )
+        )
+        .join(Product, Product.id == Sale.product_id)
+        .scalar()
+    )
+    
+    # Total revenue (current month) - for comparison
     total_revenue = (
         db.session.query(
             func.coalesce(
@@ -959,9 +1001,6 @@ def admin_financial_reports():
                 func.extract('year', Sale.created_at) == current_year)
         .scalar()
     )
-    
-    print(f"DEBUG: Current month: {current_month}, year: {current_year}")
-    print(f"DEBUG: Total revenue query result: {total_revenue}")
     
     # Previous month revenue
     prev_revenue = (
@@ -976,8 +1015,16 @@ def admin_financial_reports():
         .scalar()
     )
     
-    print(f"DEBUG: Previous month: {prev_month}, year: {prev_year}")
-    print(f"DEBUG: Previous revenue query result: {prev_revenue}")
+    # Total cost (all time)
+    total_cost_all = (
+        db.session.query(
+            func.coalesce(
+                func.sum(Sale.quantity * Product.buying_price), 0
+            )
+        )
+        .join(Product, Product.id == Sale.product_id)
+        .scalar()
+    )
     
     # Total cost (current month)
     total_cost = (
@@ -1004,6 +1051,12 @@ def admin_financial_reports():
                 func.extract('year', Sale.created_at) == prev_year)
         .scalar()
     )
+    
+    # Use all-time data if current month is empty
+    if total_revenue == 0:
+        total_revenue = total_revenue_all
+    if total_cost == 0:
+        total_cost = total_cost_all
     
     gross_profit = total_revenue - total_cost
     prev_gross_profit = prev_revenue - prev_cost
@@ -1114,29 +1167,27 @@ def export_financial_reports():
         worksheet_sales = writer.sheets['Sales Details']
         worksheet_summary = writer.sheets['Summary']
         
-        # Format headers for sales sheet
-        header_font_sales = workbook.styles.add_style({
-            'font': {'bold': True, 'color': 'FFFFFF'},
-            'fill': {'fill_type': 'solid', 'start_color': '4472C4'},
-            'border': {'outline': True}
-        })
+        # Import openpyxl styles
+        from openpyxl.styles import Font, PatternFill, Border, Side
         
-        # Format headers for summary sheet
-        header_font_summary = workbook.styles.add_style({
-            'font': {'bold': True, 'color': 'FFFFFF'},
-            'fill': {'fill_type': 'solid', 'start_color': '28a745'},
-            'border': {'outline': True}
-        })
+        # Define styles
+        header_font_sales = Font(bold=True, color='FFFFFF')
+        header_fill_sales = PatternFill(start_color='4472C4', end_color='4472C4', fill_type='solid')
+        
+        header_font_summary = Font(bold=True, color='FFFFFF')
+        header_fill_summary = PatternFill(start_color='28a745', end_color='28a745', fill_type='solid')
         
         # Apply formatting to sales headers
         for col_num, header in enumerate(df.columns, 1):
             cell = worksheet_sales.cell(row=1, column=col_num)
-            cell.style = header_font_sales
+            cell.font = header_font_sales
+            cell.fill = header_fill_sales
         
         # Apply formatting to summary headers
         for col_num, header in enumerate(summary_df.columns, 1):
             cell = worksheet_summary.cell(row=1, column=col_num)
-            cell.style = header_font_summary
+            cell.font = header_font_summary
+            cell.fill = header_fill_summary
         
         # Auto-adjust column widths for both sheets
         for worksheet in [worksheet_sales, worksheet_summary]:
